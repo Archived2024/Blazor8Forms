@@ -8,7 +8,7 @@
 
 @code {
 
-    public PizzaOrder? formModel { get; set; }}
+    public PizzaOrder? formModel { get; set; }
 
     public class Option
     {
@@ -20,19 +20,20 @@
         new Option {Value = "small", Display ="Small"},
         new Option {Value = "medium", Display ="Medium"},
         new Option {Value = "large", Display ="Large"}
-    
-    }
 
-        public Option[] cookedoptions = new Option[]{
+
+    };
+
+    public Option[] cookedoptions = new Option[]{
         new Option {Value = "light", Display ="Light"},
         new Option {Value = "normal", Display ="Normal"},
         new Option {Value = "welldone", Display ="Well Done"}
 
-    }
+    };
 
     protected override async Task OnInitializedAsync()
     {
-        formModel ?? = new();
+        formModel ??= new();
         editContext = new EditContext(formModel);
         editContext.OnValidationRequested += form1HandleValidationRequest;
         messageStore =new(editContext);
@@ -42,7 +43,64 @@
 
     public class PizzaOrder 
     {
-    
+
+        public string? Cooked { get; set; } = "normal";
+
+        public bool ExtraCheese { get; set; }
+        public bool Peppers { get; set; }
+        public bool Sausage { get; set; }
+
+        [Required]
+        public string? Size { get; set; } = null;
+        [Required]
+        [StringLength(30, ErrorMessage = "First name is too long.")]
+        public string? FirstName { get; set; }
+        [Required]
+        [StringLength(30, ErrorMessage = "Last name is too long.")]
+        public string? LastName { get; set; }
+        [Required]
+        [EmailAddress]
+        public string? Email { get; set; }
+
+        [Required]
+        public DateTime Deliverytime { get; set; } = DateTime.Now;
+
+
     }
+
+    public class EmailAttribute : ValidationAttribute
+    {
+        protected override ValidationResult? IsValid(object? value, ValidationContext? validationContext)
+        {
+            if (value is not null)
+
+            {
+                var pattern = @"(@)(.+)";
+                if(Regex.IsMatch(value.ToString(), pattern))
+                {
+                    if(value!.ToString().Contains("test.com"))
+                    {
+                        return  new ValidationResult("No survice to test.com users.", new[] { validationContext!.MemberName });
+                    }
+                    else
+                    {
+                        return ValidationResult.Success;
+                    }
+               }
+                else
+                {
+                    return new ValidationResult("Invalide mail format", new[] { validationContext!.MemberName });
+                 }
+             }
+             else
+             {
+                    return new ValidationResult("Email is required.", new[] { validationContext!.MemberName });
+             }
+           
+        }
+    }
+
+
+
 
 }
