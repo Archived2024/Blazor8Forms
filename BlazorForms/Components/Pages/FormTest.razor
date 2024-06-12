@@ -1,0 +1,48 @@
+﻿@page "/formtest"
+
+@using System.ComponentModel.DataAnnotations
+@using System.Text.RegularExpressions
+
+
+<h3>FormTest</h3>
+
+@code {
+
+    public PizzaOrder? formModel { get; set; }}
+
+    public class Option
+    {
+        public string? Value { get; set; }
+        public string? Display { get; set; }
+    }
+
+    public Option[] pizzasizes = new Option[]{
+        new Option {Value = "small", Display ="Small"},
+        new Option {Value = "medium", Display ="Medium"},
+        new Option {Value = "large", Display ="Large"}
+    
+    }
+
+        public Option[] cookedoptions = new Option[]{
+        new Option {Value = "light", Display ="Light"},
+        new Option {Value = "normal", Display ="Normal"},
+        new Option {Value = "welldone", Display ="Well Done"}
+
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        formModel ?? = new();
+        editContext = new EditContext(formModel);
+        editContext.OnValidationRequested += form1HandleValidationRequest;
+        messageStore =new(editContext);
+
+
+    }
+
+    public class PizzaOrder 
+    {
+    
+    }
+
+}
