@@ -1,13 +1,164 @@
-﻿@page "/formtest"
+﻿@page "/formstest"
 
 @using System.ComponentModel.DataAnnotations
 @using System.Text.RegularExpressions
 
 
-<h3>FormTest</h3>
+<h3>Pizza Order</h3>
+<EditForm Enhance EditContext="editContext" OnValidSubmit="@SubmitForm1" FormName="Form1">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="container">
+        <div class="row">
+            <div class="col-md-2 p-1">
+                <label>First Name</label>
+            </div>
+            <div class="col-md-4 p-1">
+                <InputText @bind-Value="formModel!.FirstName" />
+                <ValidationMessage For="@(() => formModel!.FirstName)" />
+            </div>
+        </div>
+    </div>
+    <div class="container">
+        <div class="row">
+            <div class="col-md-2 p-1">
+                <label>Last Name</label>
+            </div>
+            <div class="col-md-4 p-1">
+                <InputText @bind-Value="formModel!.LastName" />
+                <ValidationMessage For="@(() => formModel!.LastName)" />
+            </div>
+        </div>
+    </div>
+    <div class="container">
+        <div class="row">
+            <div class="col-md-2 p-1">
+                <label>Email</label>
+            </div>
+            <div class="col-md-4 p-1">
+                <InputText @bind-Value="formModel!.Email" />
+                <ValidationMessage For="@(() => formModel!.Email)" />
+            </div>
+        </div>
+    </div>
+    <div class="container">
+        <div class="row">
+            <div class="col-md-2 p-1">
+                <label>Size</label>
+            </div>
+            <div class="col-md-4 p-1">
+                <InputSelect @bind-Value="formModel!.Size">
+                    @if (formModel!.Size is null)
+                    {
+                        <option selected value=""></option>
+                    }
+                    else
+                    {
+                        <option value=""></option>
+                    }
+                    @foreach (Option o in pizzasizes)
+                    {
+                        @if (formModel.Size == o.Value)
+                        {
+                            <option selected value="@o.Value">@o.Display</option>
+                        }
+                        else
+                        {
+                            <option value="@o.Value">@o.Display</option>
+                        }
+                    }
+                </InputSelect>
+                <ValidationMessage For="@(() => formModel!.Size)" />
+            </div>
+        </div>
+    </div>
+    <div class="container">
+        <div class="row">
+            <div class="col-md-2 p-1">
+                Toppings
+            </div>
+            <div class="col-md-4 p-1">
+                <div>
+                    <InputCheckbox @bind-Value="formModel!.ExtraCheese" />
+                    <span class="p-1">Extra Cheese</span>
+                </div>
+                <div>
+                    <InputCheckbox @bind-Value="formModel!.Peppers" />
+                    <span class="p-1">Peppers</span>
+                </div>
+                <div>
+                    <InputCheckbox @bind-Value="formModel!.Sausage" />
+                    <span class="p-1">Sausage</span>
+                </div>
+                <ValidationMessage For="@(() => formModel!.ExtraCheese)" />
+                <ValidationMessage For="@(() => formModel!.Peppers)" />
+                <ValidationMessage For="@(() => formModel!.Sausage)" />
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="row">
+            <div class="col-md-2 p-1">
+                <label>How Cooked</label>
+            </div>
+            <div class="col-md-4 p-1">
+                <InputRadioGroup @bind-Value="formModel!.Cooked">
+                    @foreach (Option o in cookedoptions)
+                    {
+                        <div><InputRadio Value="@o.Value" /><span class="p-1">@o.Display</span></div>
+
+
+                    }
+                </InputRadioGroup>
+                <ValidationMessage For="@(() => formModel!.Cooked)" />
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="row">
+            <div class="col-md-2 p-1">
+                <label>Delivery Date</label>
+            </div>
+            <div class="col-md-4 p-1">
+                <InputDate Type="InputDateType.DateTimeLocal" @bind-Value="formModel!.DeliveryTime" />
+                <ValidationMessage For="@(() => formModel!.DeliveryTime)" />
+            </div>
+        </div>
+    </div>
+
+    <div>
+        <!--<table>
+        @for (int i =0; i < 100; i++)
+        {
+             <tr>
+            @for (int j = 0; j < 30; j++)
+            {
+                 <td>@(i*j)</td>
+            }
+             </tr>
+        }
+         </table>-->
+
+    </div>
+
+    <div>
+        <button type="submit">Update</button>
+    </div>
+</EditForm>
 
 @code {
 
+
+    private EditContext? editContext;
+    private ValidationMessageStore? messageStore;
+
+
+    [SupplyParameterFromForm] //Här kan vi skicka in data från en annan sida eller som i detta fall från en form
+                              //Jag var så pedagogisk att jag inte lade till denna annotaten för att visa vad som hände när man kör utan 
+                              //och sedan glömde att jag hade hoppat över den. Testa gärnamws och utan.
     public PizzaOrder? formModel { get; set; }
 
     public class Option
@@ -31,15 +182,39 @@
 
     };
 
+    private async Task SubmitForm1()
+    {
+        // All validations passed,
+        // formModel will have valid data.
+
+    }
+
     protected override async Task OnInitializedAsync()
     {
         formModel ??= new();
-        editContext = new EditContext(formModel);
-        editContext.OnValidationRequested += form1HandleValidationRequest;
+        editContext = new(formModel);
+        editContext.OnValidationRequested += form1HandleValidationRequested;
         messageStore =new(editContext);
 
 
     }
+
+    private void form1HandleValidationRequested(object? sender, ValidationRequestedEventArgs e)
+    {
+        messageStore?.Clear();
+
+        //Customvalideringar - dvs valideringar som inte kan göras med DataAnnotations
+        if(formModel!.Sausage && formModel!.Peppers)
+        {
+            messageStore?.Add(()=> formModel.Peppers, "No peppers with sausage. You ANIMAL!!");
+        }
+       if(formModel!.Email !=null && formModel!.Email.Contains("@microsoft.com"))
+        {
+           messageStore?.Add(() => formModel.Peppers, "Not for those at Microsoft");
+        }
+      
+    }
+
 
     public class PizzaOrder 
     {
@@ -59,15 +234,21 @@
         [StringLength(30, ErrorMessage = "Last name is too long.")]
         public string? LastName { get; set; }
         [Required]
-        [EmailAddress]
+        [Email]//Här skulle annars default valideringen för email köras
+               //Kommer från EmailAttribute klassen
         public string? Email { get; set; }
 
         [Required]
-        public DateTime Deliverytime { get; set; } = DateTime.Now;
+        public DateTime DeliveryTime { get; set; } = DateTime.Now;
 
 
     }
 
+    //Såhär kan ni skapa egna attribut för valideringar
+    //OBS!!  Annotation namnet måste sluta på Attribute
+    //Detta detta för att det ska fungera med DataAnnotationsValidator som 
+    //kräver att vi följer vissa namngivningsregler
+    //Convention over configuration som i tex . ASP.NET Core och Entity Framework
     public class EmailAttribute : ValidationAttribute
     {
         protected override ValidationResult? IsValid(object? value, ValidationContext? validationContext)
